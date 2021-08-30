@@ -44,7 +44,8 @@ namespace Uplift.Areas.Admin.Controllers
         [HttpGet]
         public IActionResult GetAll()
         {
-            return Json(new { data = _unitOfWork.Category.GetAll() });
+            var data = _unitOfWork.Category.GetAll();
+            return Json(new { data });
         }
 
         [HttpDelete]

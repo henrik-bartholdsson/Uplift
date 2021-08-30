@@ -4,9 +4,9 @@ using Uplift.Models;
 
 namespace Uplift.DataAccess.Data.Repository.IRepository
 {
-    public interface ICategoryRepository : IRepository<Category>
+    public interface IFrequencyRepository : IRepository<Frequency>
     {
         IEnumerable<SelectListItem> GetCategoryForDropDown();
-        void Update(Category ctaegory);
+        void Update(Frequency frequency);
     }
 }

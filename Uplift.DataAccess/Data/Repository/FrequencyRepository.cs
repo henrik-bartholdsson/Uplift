@@ -6,30 +6,30 @@ using Uplift.Models;
 
 namespace Uplift.DataAccess.Data.Repository
 {
-    public class CategoryRepository : Repository<Category> , ICategoryRepository
+    public class FrequencyRepository : Repository<Frequency>, IFrequencyRepository
     {
         private readonly ApplicationDbContext _db;
 
-        public CategoryRepository(ApplicationDbContext db) : base(db)
+        public FrequencyRepository(ApplicationDbContext db) : base(db)
         {
             _db = db;
         }
 
         public IEnumerable<SelectListItem> GetCategoryForDropDown()
         {
-            return _db.Category.Select(i => new SelectListItem()
+            return _db.Frequency.Select(i => new SelectListItem()
             {
                 Text = i.Name,
                 Value = i.Id.ToString()
             });
         }
 
-        public void Update(Category category)
+        public void Update(Frequency frequency)
         {
-            var objFromDb = _db.Category.FirstOrDefault(s => s.Id == category.Id);
+            var objFromDb = _db.Frequency.FirstOrDefault(f => f.Id == frequency.Id);
 
-            objFromDb.Name = category.Name;
-            objFromDb.DisplayOrder = category.DisplayOrder;
+            objFromDb.Name = frequency.Name;
+            objFromDb.FrequencyCount = frequency.FrequencyCount;
 
             _db.SaveChanges();
         }
