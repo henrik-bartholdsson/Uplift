@@ -47,6 +47,21 @@ namespace Uplift.Areas.Admin.Controllers
             return Json(new { data });
         }
 
+        [HttpDelete]
+        public IActionResult Delete(int id)
+        {
+            var objFromDb = _unitOfWork.Frequency.Get(id);
+
+            if (objFromDb == null)
+            {
+                return Json(new { success = false, message = "Error while deleting." });
+            }
+
+            _unitOfWork.Frequency.Remove(objFromDb);
+            _unitOfWork.Save();
+            return Json(new { success = true, message = "Deleted successfull." });
+        }
+
         public IActionResult Upsert(int? id)
         {
             Frequency frequency = new Frequency();
