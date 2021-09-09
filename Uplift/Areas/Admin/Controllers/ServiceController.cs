@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Uplift.DataAccess.Data.Repository.IRepository;
@@ -14,6 +15,9 @@ namespace Uplift.Areas.Admin.Controllers
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IWebHostEnvironment _hostEnvironment;
+
+        [BindProperty]
+        public ServiceVM ServVM { get; set; }
 
         public ServiceController(IUnitOfWork unitOfWork, IWebHostEnvironment hostEnvironment)
         {
@@ -28,19 +32,80 @@ namespace Uplift.Areas.Admin.Controllers
 
         public IActionResult Upsert(int? id)
         {
-            ServiceVM serviceVM = new ServiceVM()
+            ServVM = new ServiceVM()
             {
                 Service = new Models.Service(),
                 CategoryList = _unitOfWork.Category.GetCategoryForDropDown(),
                 FrequencyList = _unitOfWork.Frequency.GetCategoryForDropDown()
             };
-            if(id != 0)
+            if(id != null)
             {
-                serviceVM.Service = _unitOfWork.Service.Get(id.GetValueOrDefault());
+                ServVM.Service = _unitOfWork.Service.Get(id.GetValueOrDefault());
             }
 
-            return View(serviceVM);
+            return View(ServVM);
+        }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Upsert()
+        {
+            if(ModelState.IsValid)
+            {
+                string webRootPath = _hostEnvironment.WebRootPath;
+                var files = HttpContext.Request.Form.Files;
+                if(ServVM.Service.Id == 0)
+                {
+                    string fileName = Guid.NewGuid().ToString();
+                    var uploads = Path.Combine(webRootPath, @"images\services");
+                    var extension = Path.GetExtension(files[0].FileName);
+
+                    using (var fileStreams = new FileStream(Path.Combine(uploads, fileName+extension), FileMode.Create))
+                    {
+                        files[0].CopyTo(fileStreams);
+                    }
+                    ServVM.Service.ImageUrl = @"\images\services\" + fileName + extension;
+
+                    _unitOfWork.Service.Add(ServVM.Service);
+                }
+                else
+                {
+                    var serviceFromDB = _unitOfWork.Service.Get(ServVM.Service.Id);
+                    if(files.Count > 0)
+                    {
+                        string fileName = Guid.NewGuid().ToString();
+                        var uploads = Path.Combine(webRootPath, @"images\services");
+                        var extension_new = Path.GetExtension(files[0].FileName);
+
+                        var imagePath = Path.Combine(webRootPath, serviceFromDB.ImageUrl.TrimStart('\\'));
+                        if(System.IO.File.Exists(imagePath))
+                        {
+                            System.IO.File.Delete(imagePath);
+                        }
+
+                        using (var fileStreams = new FileStream(Path.Combine(uploads, fileName + extension_new), FileMode.Create))
+                        {
+                            files[0].CopyTo(fileStreams);
+                        }
+                        ServVM.Service.ImageUrl = @"\images\services\" + fileName + extension_new;
+
+                    }
+                    else
+                    {
+                        ServVM.Service.ImageUrl = serviceFromDB.ImageUrl;
+                    }
+
+                    _unitOfWork.Service.Update(ServVM.Service);
+                }
+                _unitOfWork.Save();
+                return RedirectToAction(nameof(Index));
+            }
+            else
+            {
+                ServVM.CategoryList = _unitOfWork.Category.GetCategoryForDropDown();
+                ServVM.FrequencyList = _unitOfWork.Frequency.GetCategoryForDropDown();
+                return View(ServVM);
+            }
         }
 
 
