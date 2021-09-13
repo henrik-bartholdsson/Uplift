@@ -38,7 +38,7 @@ namespace Uplift.Areas.Admin.Controllers
                 CategoryList = _unitOfWork.Category.GetCategoryForDropDown(),
                 FrequencyList = _unitOfWork.Frequency.GetCategoryForDropDown()
             };
-            if(id != null)
+            if (id != null)
             {
                 ServVM.Service = _unitOfWork.Service.Get(id.GetValueOrDefault());
             }
@@ -50,17 +50,17 @@ namespace Uplift.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Upsert()
         {
-            if(ModelState.IsValid)
+            if (ModelState.IsValid)
             {
                 string webRootPath = _hostEnvironment.WebRootPath;
                 var files = HttpContext.Request.Form.Files;
-                if(ServVM.Service.Id == 0)
+                if (ServVM.Service.Id == 0)
                 {
                     string fileName = Guid.NewGuid().ToString();
                     var uploads = Path.Combine(webRootPath, @"images\services");
                     var extension = Path.GetExtension(files[0].FileName);
 
-                    using (var fileStreams = new FileStream(Path.Combine(uploads, fileName+extension), FileMode.Create))
+                    using (var fileStreams = new FileStream(Path.Combine(uploads, fileName + extension), FileMode.Create))
                     {
                         files[0].CopyTo(fileStreams);
                     }
@@ -71,14 +71,14 @@ namespace Uplift.Areas.Admin.Controllers
                 else
                 {
                     var serviceFromDB = _unitOfWork.Service.Get(ServVM.Service.Id);
-                    if(files.Count > 0)
+                    if (files.Count > 0)
                     {
                         string fileName = Guid.NewGuid().ToString();
                         var uploads = Path.Combine(webRootPath, @"images\services");
                         var extension_new = Path.GetExtension(files[0].FileName);
 
                         var imagePath = Path.Combine(webRootPath, serviceFromDB.ImageUrl.TrimStart('\\'));
-                        if(System.IO.File.Exists(imagePath))
+                        if (System.IO.File.Exists(imagePath))
                         {
                             System.IO.File.Delete(imagePath);
                         }
@@ -112,9 +112,30 @@ namespace Uplift.Areas.Admin.Controllers
         #region API Calls
         public IActionResult GetAll()
         {
-            return Json(new { data = _unitOfWork.Service.GetAll(includeProperties:"Category,Frequency") });
+            return Json(new { data = _unitOfWork.Service.GetAll(includeProperties: "Category,Frequency") });
         }
 
+        [HttpDelete]
+        public IActionResult Delete(int id)
+        {
+            var serviceFromDB = _unitOfWork.Service.Get(id);
+            string webRootPath = _hostEnvironment.WebRootPath;
+            var imagePath = Path.Combine(webRootPath, serviceFromDB.ImageUrl.TrimStart('\\'));
+            if(System.IO.File.Exists(imagePath))
+            {
+                System.IO.File.Delete(imagePath);
+            }
+
+            if(serviceFromDB == null)
+            {
+                return Json(new { success = false, message = "Error while deleting." });
+            }
+
+            _unitOfWork.Service.Remove(serviceFromDB);
+            _unitOfWork.Save();
+
+            return Json(new { success = true, message = "Deleting Successfully." });
+        }
 
         #endregion
     }
