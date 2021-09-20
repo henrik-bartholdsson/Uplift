@@ -69,7 +69,7 @@ namespace Uplift.Areas.Customer.Controllers
 
                 foreach (int serviceId in sessionList)
                 {
-                    CartVM.ServiceList.Add(_unitOfWork.Service.Get(serviceId));
+                    CartVM.ServiceList.Add(_unitOfWork.Service.GetFirstOrDefault(s => s.Id == serviceId, includeProperties: "Frequency,Category"));
                 }
             }
 
