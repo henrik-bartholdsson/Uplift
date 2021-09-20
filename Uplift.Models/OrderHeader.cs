@@ -22,6 +22,7 @@ namespace Uplift.Models
         [Required]
         public string ZipCode { get; set; }
         public DateTime OrderDate { get; set; }
+        public string Status { get; set; }
         public string Comment { get; set; }
         public int ServiceCount { get; set; }
     }
