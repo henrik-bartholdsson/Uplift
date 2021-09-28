@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Uplift.DataAccess.Data.Repository.IRepository;
 using Uplift.Models;
+using Uplift.Utility;
 
 namespace Uplift.Areas.Admin.Controllers
 {
@@ -46,8 +47,9 @@ namespace Uplift.Areas.Admin.Controllers
         [HttpGet]
         public IActionResult GetAll()
         {
-            var data = _unitOfWork.Category.GetAll();
-            return Json(new { data });
+            //var data = _unitOfWork.Category.GetAll();
+            //return Json(new { data });
+            return Json(new { data = _unitOfWork.SP_Call.ReturnList<Category>(SD.usp_GetAllCategory, null) });
         }
 
         [HttpDelete]
